@@ -1,5 +1,25 @@
 version: "3.9"
 services:
+  app:
+    image: alpine
+    command: sh -c 'apk add sqlite; sleep 3155760000'
+    volumes:
+      - type: volume
+        source: data
+        target: /data
+  litestream:
+    image: litestream/litestream
+    command: replicate
+    environment:
+      LITESTREAM_ACCESS_KEY_ID: minioadmin
+      LITESTREAM_SECRET_ACCESS_KEY: minioadmin
+    volumes:
+      - type: volume
+        source: data
+        target: /data
+      - type: bind
+        source: ./litestream.yml
+        target: /etc/litestream.yml
   minio:
     image: minio/minio
     command: server /data
@@ -10,7 +30,8 @@ services:
         mode: host
     volumes:
       - type: volume
-        source: data
+        source: replica
         target: /data
 volumes:
   data:
+  replica:
