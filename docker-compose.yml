@@ -8,18 +8,28 @@ services:
         source: data
         target: /data
   litestream:
-    image: litestream/litestream
+    image: nickadam/litestream
+    build:
+      context: docker
+      dockerfile: Dockerfile
     command: replicate
     environment:
       LITESTREAM_ACCESS_KEY_ID: minioadmin
-      LITESTREAM_SECRET_ACCESS_KEY: minioadmin
+      LITESTREAM_SECRET_ACCESS_KEY_FILE: /run/secrets/miniosecret
+      LITESTREAM_CONFIG_CONTENT: |
+        dbs:
+          - path: /data/db.sqlite3
+            replicas:
+              - type: s3
+                bucket: app
+                path: db
+                endpoint: http://minio:9000
     volumes:
       - type: volume
         source: data
         target: /data
-      - type: bind
-        source: ./litestream.yml
-        target: /etc/litestream.yml
+    secrets:
+      - miniosecret
   minio:
     image: minio/minio
     command: server /data
@@ -35,3 +45,6 @@ services:
 volumes:
   data:
   replica:
+secrets:
+  miniosecret:
+    external: true
